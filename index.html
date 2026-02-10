@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Library</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="logo"><span>SarahLibrary</span></div>
+        <div class="auth-box">
+            <button id="loginBtn" class="primary-btn">Login / Register</button>
+        </div>
+    </nav>
+
+    <header class="main-header">
+        <h1>Explore Our Collection</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search by title or author...">
+            <button class="search-btn">Search</button>
+        </div>
+
+        <div class="stats-board">
+            <div class="stat-card">
+                <span class="stat-label">Total Books</span>
+                <span id="total-count" class="stat-value">0</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-card">
+                <span class="stat-label">Available</span>
+                <span id="available-count" class="stat-value green">0</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-card">
+                <span class="stat-label">Borrowed</span>
+                <span id="borrowed-count" class="stat-value red">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>Library Info</h3>
+                <p>Welcome to SarahLibrary. Filter by category to find your next read.</p>
+            </div>
+            <div class="sidebar-section">
+                <h3>Categories</h3>
+                <ul class="filter-list">
+                    <li><input type="checkbox" class="filter-check" value="Romance"> Romance</li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="catalog">
+              <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="if love had a price.jfif" alt="If Love had a Price">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>If love had a Price</h3>
+                    <p>Ana Huang</p>
+                    <span class="status borrow">Borrowed</span>
+                    <button class="available-count">Available</button>
+                </div>
+            </div>  
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="if the sun never sets.jfif" alt="If the sun never sets">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>If sun never sets</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div> 
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="if we ever meet again.jfif" alt="If we ever meet again">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>If We ever meet again</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div> 
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="if we were perfect.jfif" alt="If we were perfect">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>If we were perfect</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div> 
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="king of envy.jfif" alt="King of Envy">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>King of Envy</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div> 
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="king of gluttony.jfif" alt="King of gluttony">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>King of Gluttony</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="king of greed.jfif" alt="King of greed">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>King of Greed</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="king of pride.jfif" alt="King of Pride">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>King of Pride</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="king of sloth.jfif" alt="King of Sloth">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>King of Sloth</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="king of wrath.jfif" alt="King of Wrath">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>King of Wrath</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="the defender.jfif" alt="the defender">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>The Defender</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="the keeper.jfif" alt="the keeper">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>The Keeper</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="the striker.jfif" alt="the striker">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>The Striker</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+            <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="twisted game.jfif" alt="twisted game">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>Twisted Game</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+             <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="twisted hate.jfif" alt="twisted hate">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>Twisted Hate</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+             <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="twisted lies.jfif" alt="twisted lies">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>Twisted Lies</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+             <div class="book-card" data-category="Romance">
+                <div class="book-cover">
+                       <img src="twisted love.jfif" alt="twisted love">
+                </div>
+                <div class="book-info">
+                    <span class="genre">Romance</span>
+                    <h3>Twisted Love</h3>
+                    <p>Ana Huang</p>
+                    <span class="status available">Available</span>
+                    <button class="borrow-btn">Borrow</button>
+                </div>
+            </div>
+                   
+            </main>
+    </div>
+
+   <div id="loginModal" class="modal">
+    <div class="modal-card">
+        <span id="closeModal" class="close-x">&times;</span>
+        
+        <div class="modal-header">
+            <h2 id="modalTitle">Welcome Back</h2>
+            <p id="modalSubtitle">Please enter your details to access the library.</p>
+        </div>
+
+        <div class="modal-body">
+            <div id="registerFields" class="input-group hidden">
+                <label>Email Address</label>
+                <input type="email" id="regEmail" placeholder="e.g. alex@example.com">
+            </div>
+
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="Enter your username">
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••">
+            </div>
+
+            <button id="submitBtn" class="auth-submit">Continue</button>
+        </div>
+
+        <div class="modal-footer">
+            <p id="toggleText">
+                Don't have an account? <a href="#" id="toggleLink">Create one now</a>
+            </p>
+        </div>
+    </div>
+</div>
+    <script type="module" src="config.js"></script>
+    <script type="module" src="login.js"></script>
+    <script type="module" src="api.js"></script>
+</body>
+</html>
