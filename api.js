@@ -1,15 +1,14 @@
 import { BACKEND_URL } from "./config.js";
 import { currentUser, updateStats } from "./login.js";
 
-let allBooks = [];
+let allBooks = []; // Global storage for all books from DB
 const backendUrl = BACKEND_URL;
 
 async function fetchBooks() {
     try {
         const res = await fetch(`${backendUrl}/api/books`);
-        if (!res.ok) throw new Error("Failed to fetch");
         allBooks = await res.json();
-        renderBooks(allBooks);
+        renderBooks(allBooks); // Initial render
         updateStats(allBooks);
     } catch (err) {
         console.error("Fetch error:", err);
@@ -21,7 +20,7 @@ function renderBooks(books) {
     catalog.innerHTML = '';
 
     if (books.length === 0) {
-        catalog.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No books found</p>';
+        catalog.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; padding: 50px;">No books found matching your search.</p>';
         return;
     }
 
@@ -30,7 +29,6 @@ function renderBooks(books) {
         card.className = 'book-card';
         const isAvail = b.status === 'Available';
 
-        // NOTE: The backend URL is prepended to the image name
         card.innerHTML = `
             <div class="book-cover">
                 <img src="${backendUrl}/${b.image}" alt="${b.title}" onerror="this.src='https://via.placeholder.com/150x220?text=No+Cover'">
@@ -49,37 +47,46 @@ function renderBooks(books) {
                 document.getElementById('loginModal').style.display = "flex";
                 return;
             }
-            try {
-                await fetch(`${backendUrl}/api/borrow/${b.id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id })
-                });
-                fetchBooks(); // Refresh list
-            } catch (err) {
-                alert("Action failed. Check server connection.");
-            }
+            await fetch(`${backendUrl}/api/borrow/${b.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id })
+            });
+            fetchBooks(); // Refresh data and stats
         });
 
         catalog.appendChild(card);
     });
 }
 
+// SEARCH FUNCTION
+function handleSearch() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    
+    // Filter the global allBooks array
+    const filtered = allBooks.filter(book => 
+        book.title.toLowerCase().includes(query) || 
+        book.author.toLowerCase().includes(query) ||
+        (book.genre && book.genre.toLowerCase().includes(query))
+    );
+    
+    renderBooks(filtered);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchBooks();
     
-    const searchInput = document.getElementById('searchInput');
+    // Bind Search Button
     const searchBtn = document.querySelector('.search-btn');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', handleSearch);
+    }
 
-    const handleSearch = () => {
-        const q = searchInput.value.toLowerCase();
-        const filtered = allBooks.filter(b => 
-            b.title.toLowerCase().includes(q) || 
-            b.author.toLowerCase().includes(q)
-        );
-        renderBooks(filtered);
-    };
-
-    if (searchBtn) searchBtn.onclick = handleSearch;
-    if (searchInput) searchInput.onkeyup = (e) => { if (e.key === 'Enter') handleSearch(); };
+    // Bind Search on Enter Key
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+    }
 });
