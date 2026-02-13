@@ -143,9 +143,9 @@ app.post('/api/borrow/:id', async (req, res) => {
     res.json({ ok: true });
 });
 
-// This allows the app to work both locally and on Vercel
+// Remove app.listen(3000) or wrap it like this:
 if (process.env.NODE_ENV !== 'production') {
     app.listen(3000, () => console.log('Server running on http://localhost:3000'));
 }
 
-module.exports = app; // CRITICAL for Vercel
+module.exports = app;
