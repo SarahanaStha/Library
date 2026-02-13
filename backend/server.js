@@ -143,12 +143,9 @@ app.post('/api/borrow/:id', async (req, res) => {
     res.json({ ok: true });
 });
 
-app.listen(3000, () => console.log('🚀 Secure Server running on http://localhost:3000'));
-
+// This allows the app to work both locally and on Vercel
 if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+    app.listen(3000, () => console.log('Server running on http://localhost:3000'));
 }
 
-// IMPORTANT: Export for Vercel
-module.exports = app;
+module.exports = app; // CRITICAL for Vercel
