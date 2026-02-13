@@ -10,7 +10,11 @@ const app = express();
 const saltRounds = 10; // For bcrypt hashing
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: '*', // For testing, allows all. For security later, put your frontend URL here.
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type']
+}));
 app.use(express.static(path.join(__dirname, '..')));
 
 const pool = new Pool({
@@ -140,3 +144,11 @@ app.post('/api/borrow/:id', async (req, res) => {
 });
 
 app.listen(3000, () => console.log('🚀 Secure Server running on http://localhost:3000'));
+
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+}
+
+// IMPORTANT: Export for Vercel
+module.exports = app;
