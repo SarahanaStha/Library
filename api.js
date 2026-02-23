@@ -19,42 +19,52 @@ function renderBooks(books) {
     const catalog = document.querySelector('.catalog');
     catalog.innerHTML = '';
 
-    if (books.length === 0) {
-        catalog.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; padding: 50px;">No books found matching your search.</p>';
-        return;
-    }
-
     books.forEach(b => {
         const card = document.createElement('div');
         card.className = 'book-card';
-        const isAvail = b.status === 'Available';
+        
+        const isAvailable = b.status === 'Available';
+        const isBorrowedByMe = currentUser && parseInt(b.borrowed_by) === parseInt(currentUser.id);
+        const isBorrowedByOthers = !isAvailable && !isBorrowedByMe;
+
+        let btnText = "Borrow";
+        let btnClass = "";
+        let btnDisabled = false;
+
+        if (isBorrowedByMe) {
+            btnText = "Return";
+            btnClass = "return-btn";
+        } else if (isBorrowedByOthers) {
+            btnText = "Unavailable";
+            btnDisabled = true;
+            btnClass = "disabled-btn";
+        }
 
         card.innerHTML = `
             <div class="book-cover">
-                <img src="${backendUrl}/${b.image}" alt="${b.title}" onerror="this.src='https://via.placeholder.com/150x220?text=No+Cover'">
+                <img src="${BACKEND_URL}/${b.image}" alt="${b.title}">
             </div>
             <div class="book-info">
-                <span class="genre">${b.genre || 'Romance'}</span>
+                <span class="genre">${b.genre}</span>
                 <h3>${b.title}</h3>
                 <p>${b.author}</p>
-                <span class="status ${isAvail ? 'available' : 'borrow'}">${b.status}</span>
-                <button class="borrow-btn">${isAvail ? 'Borrow' : 'Return'}</button>
+                <span class="status ${isAvailable ? 'available' : 'borrow'}">
+                    ${isBorrowedByOthers ? 'Occupied' : b.status}
+                </span>
+                <button class="borrow-btn ${btnClass}" ${btnDisabled ? 'disabled' : ''}>${btnText}</button>
             </div>
         `;
 
         card.querySelector('.borrow-btn').addEventListener('click', async () => {
-            if (!currentUser) {
-                document.getElementById('loginModal').style.display = "flex";
-                return;
-            }
-            await fetch(`${backendUrl}/api/borrow/${b.id}`, {
+            if (!currentUser) { document.getElementById('loginModal').style.display = "flex"; return; }
+            const res = await fetch(`${BACKEND_URL}/api/borrow/${b.id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: currentUser.id })
             });
-            fetchBooks(); // Refresh data and stats
+            if (res.ok) fetchBooks();
+            else { const err = await res.json(); alert(err.error); }
         });
-
         catalog.appendChild(card);
     });
 }

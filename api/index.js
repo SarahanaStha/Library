@@ -124,28 +124,61 @@ app.post('/api/login', async (req, res) => {
 // --- BOOKS & BORROW ---
 
 app.get('/api/books', async (req, res) => {
-    const r = await pool.query('SELECT * FROM books ORDER BY title ASC');
-    res.json(r.rows);
+    try {
+        const r = await pool.query(`
+            SELECT b.*, ub.user_id as borrowed_by 
+            FROM books b 
+            LEFT JOIN user_borrows ub ON b.id = ub.book_id AND ub.returned_at IS NULL
+            ORDER BY b.title ASC
+        `);
+        res.json(r.rows);
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// 2. New Endpoint: Get only books borrowed by a specific user
+app.get('/api/my-books/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const r = await pool.query(`
+            SELECT b.*, ub.borrowed_at 
+            FROM books b 
+            JOIN user_borrows ub ON b.id = ub.book_id 
+            WHERE ub.user_id = $1 AND ub.returned_at IS NULL
+        `, [userId]);
+        res.json(r.rows);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 3. Updated POST /api/borrow/:id: Checks for ownership before returning
 app.post('/api/borrow/:id', async (req, res) => {
     const bookId = req.params.id;
     const { userId } = req.body;
-    const cur = await pool.query('SELECT status FROM books WHERE id = $1', [bookId]);
-    const nextStatus = cur.rows[0].status === 'Available' ? 'Borrowed' : 'Available';
-    
-    await pool.query('UPDATE books SET status=$1 WHERE id=$2', [nextStatus, bookId]);
-    if (nextStatus === 'Borrowed') {
-        await pool.query('INSERT INTO user_borrows(user_id, book_id) VALUES($1, $2)', [userId, bookId]);
-    } else {
-        await pool.query('UPDATE user_borrows SET returned_at=NOW() WHERE user_id=$1 AND book_id=$2 AND returned_at IS NULL', [userId, bookId]);
-    }
-    res.json({ ok: true });
+
+    try {
+        // Find if someone currently has this book
+        const currentBorrow = await pool.query(
+            'SELECT user_id FROM user_borrows WHERE book_id = $1 AND returned_at IS NULL', 
+            [bookId]
+        );
+
+        if (currentBorrow.rows.length > 0) {
+            // BOOK IS BORROWED - Attempting to Return
+            const ownerId = currentBorrow.rows[0].user_id;
+            
+            if (parseInt(ownerId) !== parseInt(userId)) {
+                return res.status(403).json({ error: "Only the borrower can return this book." });
+            }
+
+            // Valid Return
+            await pool.query('UPDATE user_borrows SET returned_at=NOW() WHERE book_id=$1 AND returned_at IS NULL', [bookId]);
+            await pool.query('UPDATE books SET status=\'Available\' WHERE id=$2', [bookId]);
+            return res.json({ ok: true, message: "Returned successfully" });
+
+        } else {
+            // BOOK IS AVAILABLE - Attempting to Borrow
+            await pool.query('INSERT INTO user_borrows(user_id, book_id) VALUES($1, $2)', [userId, bookId]);
+            await pool.query('UPDATE books SET status=\'Borrowed\' WHERE id=$2', [bookId]);
+            return res.json({ ok: true, message: "Borrowed successfully" });
+        }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
-
-// Remove app.listen(3000) or wrap it like this:
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(3000, () => console.log('Server running on http://localhost:3000'));
-}
-
-module.exports = app;

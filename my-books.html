@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Borrowed Books</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer">Sarah<span>Library</span></div>
+        <button onclick="window.location.href='index.html'" class="primary-btn">Back to Catalog</button>
+    </nav>
+
+    <header class="main-header">
+        <h1>My Personal Shelf</h1>
+        <p>Books you currently have borrowed.</p>
+    </header>
+
+    <div class="container">
+        <main class="catalog" id="myBooksGrid">
+            <!-- Borrowed books will appear here -->
+        </main>
+    </div>
+
+    <script type="module">
+        import { BACKEND_URL } from "./config.js";
+        import { currentUser } from "./login.js";
+
+        if (!currentUser) { window.location.href = 'index.html'; }
+
+        async function loadMyBooks() {
+            const res = await fetch(`${BACKEND_URL}/api/my-books/${currentUser.id}`);
+            const books = await res.json();
+            const grid = document.getElementById('myBooksGrid');
+            grid.innerHTML = books.length ? '' : '<p>You haven\'t borrowed any books yet.</p>';
+            
+            books.forEach(b => {
+                const card = document.createElement('div');
+                card.className = 'book-card';
+                card.innerHTML = `
+                    <div class="book-cover"><img src="${BACKEND_URL}/${b.image}"></div>
+                    <div class="book-info">
+                        <h3>${b.title}</h3>
+                        <p>${b.author}</p>
+                        <button class="borrow-btn return-btn">Return Book</button>
+                    </div>
+                `;
+                card.querySelector('button').onclick = async () => {
+                    await fetch(`${BACKEND_URL}/api/borrow/${b.id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser.id })
+                    });
+                    loadMyBooks();
+                };
+                grid.appendChild(card);
+            });
+        }
+        loadMyBooks();
+    </script>
+</body>
+</html>

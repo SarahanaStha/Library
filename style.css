@@ -273,3 +273,13 @@ body {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+.borrow-btn.return-btn {
+    background: linear-gradient(90deg, #ef4444, #b91c1c); /* Red for Return */
+}
+
+.borrow-btn.disabled-btn {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none !important;
+}
