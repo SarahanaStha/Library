@@ -1,30 +1,43 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+// No need for dotenv.config() on Vercel, but good for local
+require('dotenv').config(); 
 
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
-const bcrypt = require('bcryptjs'); // Added bcrypt
+const bcrypt = require('bcryptjs');
 
 const app = express();
-const saltRounds = 10; // For bcrypt hashing
-
 app.use(express.json());
-app.use(cors({
-    origin: '*', // For testing, allows all. For security later, put your frontend URL here.
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type']
-}));
+app.use(cors());
 app.use(express.static(path.join(__dirname, '..')));
 
+// Use a single pool instance
 const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: 5432,
-    ssl: { rejectUnauthorized: false },
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: 5432,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+  // Add these for Vercel stability:
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
 });
+
+// Helper function to test connection without crashing the whole script
+async function query(text, params) {
+    const start = Date.now();
+    try {
+        const res = await pool.query(text, params);
+        return res;
+    } catch (err) {
+        console.error('Database Query Error:', err.message);
+        throw err;
+    }
+}
 
 // --- DATABASE INIT ---
 app.get('/api/init', async (req, res) => {
