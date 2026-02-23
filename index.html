@@ -52,31 +52,42 @@
     </div>
 
     <div id="loginModal" class="modal">
-        <div class="modal-card">
-            <span id="closeModal" class="close-x">&times;</span>
-            <div class="modal-header">
-                <h2 id="modalTitle">Welcome Back</h2>
+    <div class="modal-card">
+        <!-- Close Button -->
+        <span id="closeModal" class="close-x">&times;</span>
+        
+        <div class="modal-header">
+            <h2 id="modalTitle">Welcome Back</h2>
+            <p id="modalSubtitle">Please enter your details to access the library.</p>
+        </div>
+
+        <div class="modal-body">
+            <!-- Email Field (Only for Register) -->
+            <div id="registerFields" class="input-group hidden">
+                <label>Email Address</label>
+                <input type="email" id="regEmail" placeholder="e.g. alex@example.com">
             </div>
-            <div class="modal-body">
-                <div id="registerFields" class="input-group hidden">
-                    <label>Email</label>
-                    <input type="email" id="regEmail">
-                </div>
-                <div class="input-group">
-                    <label>Username</label>
-                    <input type="text" id="username">
-                </div>
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="password">
-                </div>
-                <button id="submitBtn" class="auth-submit">Continue</button>
+
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="Enter your username">
             </div>
-            <div class="modal-footer">
-                <p><a href="#" id="toggleLink">Create an account</a></p>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••">
             </div>
+
+            <button id="submitBtn" class="auth-submit">Continue</button>
+        </div>
+
+        <div class="modal-footer">
+            <p id="toggleText">
+                Don't have an account? <a href="#" id="toggleLink">Create one now</a>
+            </p>
         </div>
     </div>
+</div>
 
     <script type="module" src="login.js"></script>
     <script type="module" src="api.js"></script>
