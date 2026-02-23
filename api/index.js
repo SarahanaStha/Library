@@ -1,4 +1,5 @@
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') }); // Look for .env in the root
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
