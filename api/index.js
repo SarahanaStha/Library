@@ -125,14 +125,19 @@ app.post('/api/login', async (req, res) => {
 
 app.get('/api/books', async (req, res) => {
     try {
-        const r = await pool.query(`
-            SELECT b.*, ub.user_id as borrowed_by 
+        // This query gets ALL books and ONLY the current active borrower ID
+        const query = `
+            SELECT b.*, 
+            (SELECT user_id FROM user_borrows WHERE book_id = b.id AND returned_at IS NULL LIMIT 1) as borrowed_by
             FROM books b 
-            LEFT JOIN user_borrows ub ON b.id = ub.book_id AND ub.returned_at IS NULL
             ORDER BY b.title ASC
-        `);
+        `;
+        const r = await pool.query(query);
         res.json(r.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // 2. New Endpoint: Get only books borrowed by a specific user
