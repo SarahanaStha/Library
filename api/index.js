@@ -1,47 +1,32 @@
 const path = require('path');
-// // No need for dotenv.config() on Vercel, but good for local
-// require('dotenv').config(); 
-
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 
 const app = express();
+const saltRounds = 10;
+
 app.use(express.json());
 app.use(cors());
+
+// Serves images from the root folder
 app.use(express.static(path.join(__dirname, '..')));
 
-// Use a single pool instance
+// Use the DATABASE_URL (Unified Connection String) from Vercel/Neon
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false,
   },
-  // Add these for Vercel stability:
   connectionTimeoutMillis: 5000,
   idleTimeoutMillis: 30000,
 });
 
-// Helper function to test connection without crashing the whole script
-async function query(text, params) {
-    const start = Date.now();
-    try {
-        const res = await pool.query(text, params);
-        return res;
-    } catch (err) {
-        console.error('Database Query Error:', err.message);
-        throw err;
-    }
-}
-
-// --- DATABASE INIT ---
+// --- DATABASE INIT (Visit /api/init once to setup) ---
 app.get('/api/init', async (req, res) => {
     try {
+        // Drop existing tables to ensure clean schema with correct constraints
         await pool.query('DROP TABLE IF EXISTS user_borrows CASCADE;');
         await pool.query('DROP TABLE IF EXISTS books CASCADE;');
         await pool.query('DROP TABLE IF EXISTS users CASCADE;');
@@ -92,53 +77,53 @@ app.get('/api/init', async (req, res) => {
         ];
 
         for (const row of sample) {
-            await pool.query('INSERT INTO books(title,author,genre,image) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING', row);
+            await pool.query('INSERT INTO books(title,author,genre,image) VALUES($1,$2,$3,$4)', row);
         }
-        res.send('<h1>Success!</h1><p>Database Reset. Users cleared. Passwords will now be hashed.</p>');
-    } catch (err) { res.status(500).send(err.message); }
+        res.send('<h1>Success!</h1><p>Database Reset. Schema updated with Unique Constraints. Sample books seeded.</p>');
+    } catch (err) { 
+        res.status(500).send(`Init Error: ${err.message}`); 
+    }
 });
 
-// --- AUTH WITH BCRYPT ---
+// --- AUTHENTICATION ---
 
 app.post('/api/register', async (req, res) => {
     const { username, password, email } = req.body;
     try {
-        // Hash the password before saving
         const hashedPassword = await bcrypt.hash(password, saltRounds);
-        
         const result = await pool.query(
-            'INSERT INTO users(username, password, email) VALUES($1, $2, $3) RETURNING id, username',
+            'INSERT INTO users(username, password, email) VALUES($1, $2, $3) RETURNING id, username, email',
             [username, hashedPassword, email]
         );
         res.json({ ok: true, user: result.rows[0] });
-    } catch (err) { res.status(400).json({ error: "Username already taken" }); }
+    } catch (err) { 
+        res.status(400).json({ error: "Username already taken" }); 
+    }
 });
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-        
         if (result.rows.length > 0) {
             const user = result.rows[0];
-            // Compare hashed password
             const match = await bcrypt.compare(password, user.password);
-            
             if (match) {
-                // Remove password from object before sending to frontend
                 delete user.password;
                 return res.json({ ok: true, user });
             }
         }
         res.status(401).json({ error: "Invalid username or password" });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        res.status(500).json({ error: err.message }); 
+    }
 });
 
-// --- BOOKS & BORROW ---
+// --- CATALOG & SEARCH ---
 
 app.get('/api/books', async (req, res) => {
     try {
-        // This query gets ALL books and ONLY the current active borrower ID
+        // This query finds all books and identifies who (if anyone) has borrowed it currently
         const query = `
             SELECT b.*, 
             (SELECT user_id FROM user_borrows WHERE book_id = b.id AND returned_at IS NULL LIMIT 1) as borrowed_by
@@ -148,12 +133,11 @@ app.get('/api/books', async (req, res) => {
         const r = await pool.query(query);
         res.json(r.rows);
     } catch (err) {
-        console.error(err);
         res.status(500).json({ error: err.message });
     }
 });
 
-// 2. New Endpoint: Get only books borrowed by a specific user
+// Get books for personal shelf
 app.get('/api/my-books/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -164,39 +148,54 @@ app.get('/api/my-books/:userId', async (req, res) => {
             WHERE ub.user_id = $1 AND ub.returned_at IS NULL
         `, [userId]);
         res.json(r.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        res.status(500).json({ error: err.message }); 
+    }
 });
 
-// 3. Updated POST /api/borrow/:id: Checks for ownership before returning
+// --- BORROW / RETURN LOGIC ---
+
 app.post('/api/borrow/:id', async (req, res) => {
     const bookId = req.params.id;
     const { userId } = req.body;
 
+    if (!userId) return res.status(401).json({ error: "Login required" });
+
     try {
-        // Find if someone currently has this book
+        // Check current borrow status
         const currentBorrow = await pool.query(
             'SELECT user_id FROM user_borrows WHERE book_id = $1 AND returned_at IS NULL', 
             [bookId]
         );
 
         if (currentBorrow.rows.length > 0) {
-            // BOOK IS BORROWED - Attempting to Return
+            // BOOK IS BORROWED -> Attempting to Return
             const ownerId = currentBorrow.rows[0].user_id;
             
+            // Only the person who borrowed the book can return it
             if (parseInt(ownerId) !== parseInt(userId)) {
-                return res.status(403).json({ error: "Only the borrower can return this book." });
+                return res.status(403).json({ error: "Unauthorized: Only the current borrower can return this book." });
             }
 
-            // Valid Return
             await pool.query('UPDATE user_borrows SET returned_at=NOW() WHERE book_id=$1 AND returned_at IS NULL', [bookId]);
-            await pool.query('UPDATE books SET status=\'Available\' WHERE id=$2', [bookId]);
+            await pool.query('UPDATE books SET status=\'Available\' WHERE id=$1', [bookId]);
             return res.json({ ok: true, message: "Returned successfully" });
 
         } else {
-            // BOOK IS AVAILABLE - Attempting to Borrow
+            // BOOK IS AVAILABLE -> Attempting to Borrow
             await pool.query('INSERT INTO user_borrows(user_id, book_id) VALUES($1, $2)', [userId, bookId]);
-            await pool.query('UPDATE books SET status=\'Borrowed\' WHERE id=$2', [bookId]);
+            await pool.query('UPDATE books SET status=\'Borrowed\' WHERE id=$1', [bookId]);
             return res.json({ ok: true, message: "Borrowed successfully" });
         }
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        res.status(500).json({ error: err.message }); 
+    }
 });
+
+// Listen locally
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(3000, () => console.log('Server running locally on port 3000'));
+}
+
+// Export for Vercel
+module.exports = app;
