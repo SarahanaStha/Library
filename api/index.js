@@ -1,6 +1,6 @@
 const path = require('path');
-// No need for dotenv.config() on Vercel, but good for local
-require('dotenv').config(); 
+// // No need for dotenv.config() on Vercel, but good for local
+// require('dotenv').config(); 
 
 const express = require('express');
 const { Pool } = require('pg');
